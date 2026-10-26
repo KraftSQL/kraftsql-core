@@ -1,10 +1,13 @@
 package rocks.frieler.kraftsql.h2.engine
 
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.data.ConstantData
+import rocks.frieler.kraftsql.data.Data
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Selection
+import rocks.frieler.kraftsql.data.named
 import rocks.frieler.kraftsql.expressions.get
 
 class H2SqlGeneratorTest {
@@ -68,12 +71,22 @@ class H2SqlGeneratorTest {
         val selection = Selection(data, listOf(data.get<String>("name")))
 
         H2SqlGenerator.makeSQL(selection).normalized() shouldBe
-            "SELECT `name` " +
+            "SELECT `name` AS `name` " +
             "FROM (" +
                 "SELECT CAST(1 AS INTEGER) AS `number`,CAST('one' AS VARCHAR) AS `name` " +
                 "UNION ALL " +
                 "SELECT CAST(2 AS INTEGER) AS `number`,CAST('two' AS VARCHAR) AS `name`" +
             ") AS `source`"
+    }
+
+    @Test
+    fun `makeSQL selects an expression of a Selection aliased by its given name`() {
+        val source = ConstantData(DataRow("foo" to "bar"))
+        val selection = Selection(source, listOf(source.get<String>("foo") named "fu"))
+
+        H2SqlGenerator.makeSQL(selection).normalized() shouldBe
+            "SELECT `foo` AS `fu` " +
+            "FROM (${H2SqlGenerator.makeSQL(source).normalized()}) AS `source`"
     }
 
     // ATTENTION: Does not respect String literal, but changes them as well!

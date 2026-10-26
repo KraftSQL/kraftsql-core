@@ -26,7 +26,7 @@ class KraftSqlLocalEngine : Engine {
             is ConstantData<*> -> data.items
                 .map { if (it !is DataRow) DataClassSerDe.serialize(it) else it }
             is Selection -> rows(data.source)
-                .map { row -> DataRow(data.expressions.map { column -> (column as Column<*>).name to row[column.name] }) }
+                .map { row -> DataRow(data.expressions.map { column -> column.name to row[(column.expression as Column<*>).name] }) }
             else -> throw NotImplementedError("Collecting $data is not implemented.")
         }
     }

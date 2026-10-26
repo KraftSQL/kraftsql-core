@@ -1,6 +1,7 @@
 package rocks.frieler.kraftsql.expressions
 
 import rocks.frieler.kraftsql.data.Data
+import rocks.frieler.kraftsql.data.NamedExpression
 import rocks.frieler.kraftsql.data.Type
 import java.util.Objects
 import kotlin.reflect.KProperty1
@@ -13,14 +14,23 @@ import kotlin.reflect.typeOf
  * [schema][Data.schema]. Otherwise, a [Column] is created by the [Column] function, which determines its [type] from
  * the Kotlin type [T].
  *
+ * A [Column] is also a [rocks.frieler.kraftsql.data.NamedExpression] of itself, naturally named by its [name] and
+ * thereby directly usable in queries. To select it under another name, it can be [rocks.frieler.kraftsql.data.named],
+ * e.g. `data["col"] named "my_column"`.
+ *
  * @param T the Kotlin type of the column's values
  * @param name the name of the column
  * @param type the [Type] of the column, expected to comply with `T`
  */
 class Column<T> @PublishedApi internal constructor(
-    val name: String,
+    override val name: String,
     override val type: Type,
-) : Expression<T> {
+) : Expression<T>, NamedExpression<T> {
+    /**
+     * This [Column] itself.
+     */
+    override val expression: Column<T> get() = this
+
     override fun toString() = name
 
     override fun equals(other: Any?): Boolean = other is Column<*>

@@ -9,6 +9,7 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.data.Data
 import rocks.frieler.kraftsql.data.DataRow
+import rocks.frieler.kraftsql.data.NamedExpression
 import rocks.frieler.kraftsql.data.Type
 import rocks.frieler.kraftsql.data.Column as ColumnDefinition
 
@@ -34,6 +35,14 @@ class ColumnTest {
         shouldThrow<IllegalStateException> {
             Column<Void>("integer")
         }
+    }
+
+    @Test
+    fun `Column is a NamedExpression of itself, named by its name`() {
+        val column = Column<String>("text") as NamedExpression<String>
+
+        column.name shouldBe "text"
+        column.expression shouldBe column
     }
 
     @Test

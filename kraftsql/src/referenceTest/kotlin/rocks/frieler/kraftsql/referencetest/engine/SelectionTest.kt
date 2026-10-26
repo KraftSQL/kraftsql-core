@@ -4,6 +4,7 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.DataRow
+import rocks.frieler.kraftsql.data.named
 import rocks.frieler.kraftsql.data.select
 import rocks.frieler.kraftsql.engine.collect
 import rocks.frieler.kraftsql.expressions.Column
@@ -57,6 +58,21 @@ class SelectionTest {
         selection.collect() shouldContainExactlyInAnyOrder listOf(
             DataRow("name" to "Something", "category" to "stuff"),
             DataRow("name" to "Mystery", "category" to null),
+        )
+    }
+
+    @Test
+    fun `Engine can select renamed columns of Data`() {
+        val data = ConstantData(
+            DataRow("id" to 1),
+            DataRow("id" to 2),
+        )
+
+        val selection = data.select(Column<Int>("id") named "key")
+
+        selection.collect() shouldContainExactlyInAnyOrder listOf(
+            DataRow("key" to 1),
+            DataRow("key" to 2),
         )
     }
 }

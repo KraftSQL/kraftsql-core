@@ -5,6 +5,7 @@ import rocks.frieler.kraftsql.data.Data
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Selection
 import rocks.frieler.kraftsql.engine.DataClassSerDe
+import rocks.frieler.kraftsql.expressions.Column
 
 /**
  * Utility object that generates H2 SQL for KraftSQL [rocks.frieler.kraftsql.data.Data].
@@ -33,7 +34,7 @@ object H2SqlGenerator {
     }
 
     private fun makeSQL(data: Selection): String = """
-        SELECT ${data.schema.joinToString(separator = ",") { "`${it.name}`" }}
+        SELECT ${data.expressions.joinToString(separator = ",") { "${column(it.expression as Column<*>)} AS `${it.name}`" }}
         FROM (${makeSQL(data.source)}) AS `source`
     """.trimIndent() // TODO: Merge multiple Selections.
 
@@ -42,4 +43,6 @@ object H2SqlGenerator {
         is String -> "'${value.replace("'", "''")}'"
         else -> value.toString()
     }
+
+    internal fun column(column: Column<*>) = "`${column.name}`"
 }

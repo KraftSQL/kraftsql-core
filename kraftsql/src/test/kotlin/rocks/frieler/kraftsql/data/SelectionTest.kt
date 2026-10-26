@@ -7,6 +7,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.expressions.get
 import rocks.frieler.kraftsql.expressions.Column as ColumnExpression
 
@@ -26,6 +27,13 @@ class SelectionTest {
     }
 
     @Test
+    fun `Selection has the names of the NamedExpressions and the types of their Expressions as schema`() {
+        val selection = Selection(source, listOf(name, id))
+
+        selection.schema shouldBe listOf(Column("name", Type.NULLABLE_STRING), Column("id", Type.INTEGER))
+    }
+
+    @Test
     fun `Selection rejects an empty list of columns`() {
         shouldThrow<IllegalArgumentException> {
             Selection(source, emptyList())
@@ -33,14 +41,25 @@ class SelectionTest {
     }
 
     @Test
-    fun `Selection rejects a column selected more than once`() {
+    fun `Selection rejects a duplicate column name`() {
+        val anotherDefinitionForColumnId = mockk<NamedExpression<*>> {
+            every { name } returns id.name
+        }
+
         shouldThrow<IllegalArgumentException> {
-            Selection(source, listOf(id, name, ColumnExpression<Int>("id")))
+            Selection(source, listOf(id, anotherDefinitionForColumnId))
         }
     }
 
     @Test
-    fun `Selection rejects a column whose name is not in the schema of the source`() {
+    fun `Selection can select the same Expression twice under different names`() {
+        val selection = Selection(source, listOf(id named "c1", id named "c2"))
+
+        selection.schema.map { it.name } shouldBe listOf("c1", "c2")
+    }
+
+    @Test
+    fun `Selection rejects using a column whose name is not in the schema of the source`() {
         shouldThrow<IllegalArgumentException> {
             Selection(source, listOf(ColumnExpression<String>("unknown")))
         }.apply {
@@ -49,7 +68,7 @@ class SelectionTest {
     }
 
     @Test
-    fun `Selection rejects a column whose type differs from the column of the same name in the schema of the source`() {
+    fun `Selection rejects using a column whose type differs from the column of the same name in the schema of the source`() {
         shouldThrow<IllegalArgumentException> {
             Selection(source, listOf(ColumnExpression<String>("id")))
         }
@@ -66,13 +85,6 @@ class SelectionTest {
 
         selection.source shouldBe source
         selection.expressions shouldBe listOf(foreignIdColumn)
-    }
-
-    @Test
-    fun `Selection has the names and types of the selected columns as schema in the order of the selection`() {
-        val selection = Selection(source, listOf(name, id))
-
-        selection.schema shouldBe listOf(Column("name", Type.NULLABLE_STRING), Column("id", Type.INTEGER))
     }
 
     @Test

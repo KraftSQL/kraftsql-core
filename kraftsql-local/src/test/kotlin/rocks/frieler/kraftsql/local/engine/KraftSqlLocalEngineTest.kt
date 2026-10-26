@@ -1,6 +1,7 @@
 package rocks.frieler.kraftsql.local.engine
 
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
@@ -8,6 +9,7 @@ import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.Data
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Selection
+import rocks.frieler.kraftsql.data.named
 import rocks.frieler.kraftsql.expressions.get
 
 class KraftSqlLocalEngineTest {
@@ -47,6 +49,22 @@ class KraftSqlLocalEngineTest {
         collectedData shouldContainExactly listOf(
             DataRow("category" to "bar", "id" to 1),
             DataRow("category" to "qux", "id" to 2),
+        )
+    }
+
+    @Test
+    fun `collect() can collect a Selection of renamed columns`() {
+        val source = ConstantData(
+            DataRow("id" to 1),
+            DataRow("id" to 2),
+        )
+        val selection = Selection(source, listOf(source.get<Int>("id") named "key"))
+
+        val collectedData = engine.collect(selection, DataRow::class)
+
+        collectedData shouldContainExactlyInAnyOrder listOf(
+            DataRow("key" to 1),
+            DataRow("key" to 2),
         )
     }
 
