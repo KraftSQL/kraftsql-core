@@ -7,6 +7,7 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import rocks.frieler.kraftsql.expressions.Constant
 import rocks.frieler.kraftsql.expressions.Expression
 import rocks.frieler.kraftsql.expressions.get
 import rocks.frieler.kraftsql.expressions.Column as ColumnExpression
@@ -28,9 +29,13 @@ class SelectionTest {
 
     @Test
     fun `Selection has the names of the NamedExpressions and the types of their Expressions as schema`() {
-        val selection = Selection(source, listOf(name, id))
+        val selection = Selection(source, listOf(name, id, Constant(42) named "answer"))
 
-        selection.schema shouldBe listOf(Column("name", Type.NULLABLE_STRING), Column("id", Type.INTEGER))
+        selection.schema shouldBe listOf(
+            Column("name", Type.NULLABLE_STRING),
+            Column("id", Type.INTEGER),
+            Column("answer", Type.INTEGER)
+        )
     }
 
     @Test

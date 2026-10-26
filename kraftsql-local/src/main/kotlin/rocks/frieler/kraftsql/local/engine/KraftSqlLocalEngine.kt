@@ -7,6 +7,8 @@ import rocks.frieler.kraftsql.data.Selection
 import rocks.frieler.kraftsql.engine.DataClassSerDe
 import rocks.frieler.kraftsql.engine.Engine
 import rocks.frieler.kraftsql.expressions.Column
+import rocks.frieler.kraftsql.expressions.Constant
+import rocks.frieler.kraftsql.expressions.Expression
 import kotlin.reflect.KClass
 
 /**
@@ -26,8 +28,14 @@ class KraftSqlLocalEngine : Engine {
             is ConstantData<*> -> data.items
                 .map { if (it !is DataRow) DataClassSerDe.serialize(it) else it }
             is Selection -> rows(data.source)
-                .map { row -> DataRow(data.expressions.map { column -> column.name to row[(column.expression as Column<*>).name] }) }
+                .map { row -> DataRow(data.expressions.map { column -> column.name to evaluateExpression(column.expression, row) }) }
             else -> throw NotImplementedError("Collecting $data is not implemented.")
         }
+    }
+
+    private fun evaluateExpression(expression: Expression<*>, row: DataRow) : Any? = when (expression) {
+        is Constant<*> -> expression.value
+        is Column<*> -> row[expression.name]
+        else -> throw NotImplementedError("Evaluating $expression is not supported.")
     }
 }

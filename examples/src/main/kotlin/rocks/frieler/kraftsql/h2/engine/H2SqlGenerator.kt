@@ -6,6 +6,8 @@ import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Selection
 import rocks.frieler.kraftsql.engine.DataClassSerDe
 import rocks.frieler.kraftsql.expressions.Column
+import rocks.frieler.kraftsql.expressions.Constant
+import rocks.frieler.kraftsql.expressions.Expression
 
 /**
  * Utility object that generates H2 SQL for KraftSQL [rocks.frieler.kraftsql.data.Data].
@@ -28,17 +30,25 @@ object H2SqlGenerator {
 
         return rows.joinToString(separator = " UNION ALL ") { row ->
             data.schema.joinToString(separator = ",", prefix = "SELECT ") { column ->
-                "CAST(${constant(row[column.name])} AS ${column.type.native.name}) AS `${column.name}`"
+                "CAST(${literal(row[column.name])} AS ${column.type.native.name}) AS `${column.name}`"
             }
         }
     }
 
     private fun makeSQL(data: Selection): String = """
-        SELECT ${data.expressions.joinToString(separator = ",") { "${column(it.expression as Column<*>)} AS `${it.name}`" }}
+        SELECT ${data.expressions.joinToString(separator = ",") { "${expression(it.expression)} AS `${it.name}`" }}
         FROM (${makeSQL(data.source)}) AS `source`
     """.trimIndent() // TODO: Merge multiple Selections.
 
-    internal fun constant(value: Any?) = when (value) {
+    private fun expression(expression: Expression<*>) = when (expression) {
+        is Constant<*> -> constant(expression)
+        is Column<*> -> column(expression)
+        else -> throw NotImplementedError("Rendering $expression is not implemented.")
+    }
+
+    internal fun constant(constant: Constant<*>) = "CAST(${literal(constant.value)} AS ${constant.type.native.name})"
+
+    internal fun literal(value: Any?) = when (value) {
         null -> "NULL"
         is String -> "'${value.replace("'", "''")}'"
         else -> value.toString()

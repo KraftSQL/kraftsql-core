@@ -2,6 +2,7 @@ package rocks.frieler.kraftsql.local.engine
 
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
@@ -10,6 +11,9 @@ import rocks.frieler.kraftsql.data.Data
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Selection
 import rocks.frieler.kraftsql.data.named
+import rocks.frieler.kraftsql.data.select
+import rocks.frieler.kraftsql.engine.collect
+import rocks.frieler.kraftsql.expressions.Constant
 import rocks.frieler.kraftsql.expressions.get
 
 class KraftSqlLocalEngineTest {
@@ -66,6 +70,19 @@ class KraftSqlLocalEngineTest {
             DataRow("key" to 1),
             DataRow("key" to 2),
         )
+    }
+
+    @Test
+    fun `KraftSQLLocalEngine can evaluate Constant Expressions`() {
+        val constant = Constant(42)
+        val selectionOfConstant = Selection(
+            ConstantData(DataRow("id" to 1)),
+            listOf(constant named "answer"),
+        )
+
+        val result = engine.collect(selectionOfConstant, DataRow::class)
+
+        result.single()["answer"] shouldBe 42
     }
 
     @Test
