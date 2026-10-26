@@ -8,6 +8,7 @@ import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.Data
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Selection
+import rocks.frieler.kraftsql.expressions.get
 
 class KraftSqlLocalEngineTest {
     private val engine = KraftSqlLocalEngine()

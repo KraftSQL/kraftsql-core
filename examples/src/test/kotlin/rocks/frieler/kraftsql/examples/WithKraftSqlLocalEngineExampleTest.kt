@@ -6,6 +6,7 @@ import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.select
 import rocks.frieler.kraftsql.engine.collect
+import rocks.frieler.kraftsql.expressions.get
 import rocks.frieler.kraftsql.testing.WithKraftSqlLocalEngine
 
 @WithKraftSqlLocalEngine

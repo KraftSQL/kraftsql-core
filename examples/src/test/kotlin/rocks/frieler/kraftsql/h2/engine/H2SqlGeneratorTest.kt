@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Selection
+import rocks.frieler.kraftsql.expressions.get
 
 class H2SqlGeneratorTest {
     @Test

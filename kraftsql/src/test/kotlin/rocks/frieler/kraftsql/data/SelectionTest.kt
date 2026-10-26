@@ -2,18 +2,20 @@ package rocks.frieler.kraftsql.data
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
+import rocks.frieler.kraftsql.expressions.get
 import rocks.frieler.kraftsql.expressions.Column as ColumnExpression
 
 class SelectionTest {
     private val source = mockk<Data<*>> {
         every { schema } returns listOf(Column("id", Type.INTEGER), Column("name", Type.NULLABLE_STRING))
     }
-    private val id = ColumnExpression<Int>(source, "id")
-    private val name = ColumnExpression<String?>(source, "name")
+    private val id = ColumnExpression<Int>("id")
+    private val name = ColumnExpression<String?>("name")
 
     @Test
     fun `Selection can select columns of the source`() {
@@ -33,23 +35,37 @@ class SelectionTest {
     @Test
     fun `Selection rejects a column selected more than once`() {
         shouldThrow<IllegalArgumentException> {
-            Selection(source, listOf(id, name, ColumnExpression<Int>(source, "id")))
+            Selection(source, listOf(id, name, ColumnExpression<Int>("id")))
         }
     }
 
     @Test
-    fun `Selection rejects columns of other Data than the source`() {
-        val otherData = mockk<Data<*>> {
+    fun `Selection rejects a column whose name is not in the schema of the source`() {
+        shouldThrow<IllegalArgumentException> {
+            Selection(source, listOf(ColumnExpression<String>("unknown")))
+        }.apply {
+            message shouldContain source.schema.map { column -> column.name }.toString()
+        }
+    }
+
+    @Test
+    fun `Selection rejects a column whose type differs from the column of the same name in the schema of the source`() {
+        shouldThrow<IllegalArgumentException> {
+            Selection(source, listOf(ColumnExpression<String>("id")))
+        }
+    }
+
+    @Test
+    fun `Selection can select a column retrieved from other Data, if the source has a column of the same name and type`() {
+        val otherData = mockk<Data<DataRow>> {
             every { schema } returns listOf(Column("id", Type.INTEGER))
         }
-        val selection = Selection(source, listOf(id, name))
+        val foreignIdColumn: ColumnExpression<Int> = otherData["id"]
 
-        shouldThrow<IllegalArgumentException> {
-            Selection(source, listOf(ColumnExpression<Int>(otherData, "id")))
-        }
-        shouldThrow<IllegalArgumentException> {
-            Selection(selection, listOf(id))
-        }
+        val selection = Selection(source, listOf(foreignIdColumn))
+
+        selection.source shouldBe source
+        selection.expressions shouldBe listOf(foreignIdColumn)
     }
 
     @Test

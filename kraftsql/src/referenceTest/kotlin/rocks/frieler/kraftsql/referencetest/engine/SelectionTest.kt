@@ -6,8 +6,27 @@ import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.select
 import rocks.frieler.kraftsql.engine.collect
+import rocks.frieler.kraftsql.expressions.Column
+import rocks.frieler.kraftsql.expressions.get
 
 class SelectionTest {
+    @Test
+    fun `Engine can select columns`() {
+        val data = ConstantData(
+            DataRow("id" to 1, "name" to "Something", "category" to "stuff"),
+            DataRow("id" to 2, "name" to "Something else", "category" to "stuff"),
+            DataRow("id" to 3, "name" to "Mystery", "category" to null),
+        )
+
+        val selection = data.select(Column<String?>("category"), Column<String>("name"))
+
+        selection.collect() shouldContainExactlyInAnyOrder listOf(
+            DataRow("category" to "stuff", "name" to "Something"),
+            DataRow("category" to "stuff", "name" to "Something else"),
+            DataRow("category" to null, "name" to "Mystery"),
+        )
+    }
+
     @Test
     fun `Engine can select columns of Data`() {
         val data = ConstantData(
