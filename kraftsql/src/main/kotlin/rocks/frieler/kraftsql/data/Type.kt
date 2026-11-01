@@ -16,6 +16,14 @@ interface Type {
      */
     val nullable: Boolean get() = toString().endsWith("?")
 
+    /**
+     * Checks, whether the given value is of this [Type].
+     *
+     * @param value the value to check
+     * @return whether the value is of this [Type] or not
+     */
+    fun accepts(value: Any?): Boolean
+
     override fun toString(): String
 
     companion object {
@@ -24,12 +32,18 @@ interface Type {
         /**
          * A non-nullable 32bit Integer.
          */
-        val INTEGER = object : Type { override fun toString() = "Int" }
+        val INTEGER = object : Type {
+            override fun accepts(value: Any?) = value is Int
+            override fun toString() = "Int"
+        }
 
         /**
          * A nullable 32bit Integer.
          */
-        val NULLABLE_INTEGER = object : Type { override fun toString() = "Int?" }
+        val NULLABLE_INTEGER = object : Type {
+            override fun accepts(value: Any?) = value is Int?
+            override fun toString() = "Int?"
+        }
 
         /**
          * A non-nullable character [String] of arbitrary length.
@@ -39,14 +53,20 @@ interface Type {
          *
          * Connectors map it to the native character string type of their SQL engine, e.g. `VARCHAR`.
          */
-        val STRING = object : Type { override fun toString() = "String" }
+        val STRING = object : Type {
+            override fun accepts(value: Any?) = value is String
+            override fun toString() = "String"
+        }
 
         /**
          * A nullable [String] of characters.
          *
          * Like [STRING], but additionally allows `null`, which is distinct from the empty string.
          */
-        val NULLABLE_STRING = object : Type { override fun toString() = "String?" }
+        val NULLABLE_STRING = object : Type {
+            override fun accepts(value: Any?) = value is String?
+            override fun toString() = "String?"
+        }
 
         /**
          * Returns the [Type] corresponding to the given [KType].

@@ -22,7 +22,10 @@ class H2TypeMappingTest {
     @Test
     fun `an unknown Type cannot be mapped`() {
         shouldThrow<IllegalStateException> {
-            object : Type { override fun toString(): String = "_unknown_" }.native
+            object : Type {
+                override fun accepts(value: Any?): Boolean = false
+                override fun toString(): String = "_unknown_"
+            }.native
         }
     }
 }
