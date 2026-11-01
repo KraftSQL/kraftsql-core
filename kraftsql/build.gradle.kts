@@ -19,6 +19,10 @@ java {
             kotlin.srcDir("src/referenceTest/kotlin")
             idea.module.testSources.from(kotlin.srcDirs)
         }.get())
+    }.also {
+        // Engine for running the reference tests locally, not exposed to consumers of the referenceTest feature:
+        val referenceTestEngine = configurations.dependencyScope("referenceTestEngine")
+        configurations.named("referenceTestRuntimeClasspath") { extendsFrom(referenceTestEngine.get()) }
     }
 }
 
@@ -34,4 +38,5 @@ dependencies {
     "referenceTestImplementation"(project(":kraftsql"))
     "referenceTestImplementation"(libs.junit.api)
     "referenceTestImplementation"(libs.kotest.assertions.core)
+    "referenceTestEngine"(project(":kraftsql-local"))
 }
