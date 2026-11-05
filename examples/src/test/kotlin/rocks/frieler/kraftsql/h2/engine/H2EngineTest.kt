@@ -1,19 +1,26 @@
 package rocks.frieler.kraftsql.h2.engine
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
+import io.mockk.verify
 import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.data.Column
 import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.Data
 import rocks.frieler.kraftsql.data.DataRow
+import rocks.frieler.kraftsql.data.Table
 import rocks.frieler.kraftsql.data.Type
 import rocks.frieler.kraftsql.engine.DataClassSerDe
 import java.sql.Connection
 import java.sql.ResultSet
+import java.sql.SQLException
+import java.sql.SQLNonTransientException
+import java.sql.Statement
 
 class H2EngineTest {
     private val connection = mockk<Connection>()
@@ -143,6 +150,114 @@ class H2EngineTest {
         val collectedData = engine.collect(data, DataRow::class)
 
         collectedData shouldContainExactly items
+    }
+
+    @Test
+    fun `collect() rethrows SqlNonTransientException as IllegalStateException`() {
+        val table = mockk<Table<DataRow>>()
+        val query = "<SELECT $table>"
+        every { sqlGenerator.makeSQL(table) } returns query
+
+        val sqlNonTransientException = SQLNonTransientException("error")
+        every { connection.createStatement() } returns mockk {
+            every { executeQuery(query) } throws sqlNonTransientException
+            every { close() } just runs
+        }
+
+        shouldThrow<IllegalStateException> {
+            engine.collect(table, DataRow::class)
+        }.also {
+            it.cause shouldBe sqlNonTransientException
+        }
+    }
+
+    @Test
+    fun `createTable() executes the CREATE TABLE statement and closes the Statement`() {
+        val table = mockk<Table<*>>()
+        val createStatement = "<CREATE TABLE statement for $table>"
+        every { sqlGenerator.makeCreateTableStatement(table) } returns createStatement
+        val statement = mockStatement()
+
+        engine.createTable(table)
+
+        verify { statement.execute(createStatement) }
+        verify { statement.close() }
+    }
+
+    @Test
+    fun `createTable() propagates the SQLException if the table already exists`() {
+        val table = mockk<Table<*>>()
+        val createStatement = "<CREATE TABLE statement for $table>"
+        every { sqlGenerator.makeCreateTableStatement(table) } returns createStatement
+        val exception = SQLException("Table already exists")
+        val statement = mockStatement { every { execute(createStatement) } throws exception }
+
+        shouldThrow<SQLException> {
+            engine.createTable(table)
+        } shouldBe exception
+        verify { statement.close() }
+    }
+
+    @Test
+    fun `dropTable() executes the DROP TABLE statement and closes the Statement`() {
+        val table = mockk<Table<*>>()
+        val dropStatement = "<DROP TABLE statement for $table>"
+        every { sqlGenerator.makeDropTableStatement(table, ifExists = false) } returns dropStatement
+        val statement = mockStatement()
+
+        engine.dropTable(table, ifExists = false)
+
+        verify { statement.execute(dropStatement) }
+        verify { statement.close() }
+    }
+
+    @Test
+    fun `dropTable() executes the DROP TABLE statement for ifExists if requested`() {
+        val table = mockk<Table<*>>()
+        val dropStatement = "<DROP TABLE IF EXISTS statement for $table>"
+        every { sqlGenerator.makeDropTableStatement(table, ifExists = true) } returns dropStatement
+        val statement = mockStatement()
+
+        engine.dropTable(table, ifExists = true)
+
+        verify { statement.execute(dropStatement) }
+    }
+
+    @Test
+    fun `dropTable() propagates the SQLException if the table does not exist`() {
+        val table = mockk<Table<*>>()
+        val dropStatement = "<DROP TABLE statement for $table>"
+        every { sqlGenerator.makeDropTableStatement(table, ifExists = false) } returns dropStatement
+        val exception = SQLException("Table not found")
+        val statement = mockStatement { every { execute(dropStatement) } throws exception }
+
+        shouldThrow<SQLException> {
+            engine.dropTable(table, ifExists = false)
+        } shouldBe exception
+        verify { statement.close() }
+    }
+
+    @Test
+    fun `insertInto() executes INSERT INTO statement and return number of affected rows`() {
+        val table = mockk<Table<DataRow>>()
+        val data = mockk<Data<DataRow>>()
+        val insertIntoStatement = "<INSERT INTO $table <$data>>"
+        every { sqlGenerator.makeInsertIntoStatement(table, data) } returns insertIntoStatement
+        val statement = mockStatement { every { executeUpdate(insertIntoStatement) } returns 14 }
+
+        val insertedRows = engine.insertInto(table, data)
+        verify { statement.executeUpdate(insertIntoStatement) }
+        insertedRows shouldBe 14
+    }
+
+    private fun mockStatement(block: Statement.() -> Unit = {}): Statement {
+        val statement = mockk<Statement> {
+            every { execute(any<String>()) } returns false
+            every { close() } just runs
+            block()
+        }
+        every { connection.createStatement() } returns statement
+        return statement
     }
 
     private fun mockQueryResult(query: String, data: ConstantData<*>) {

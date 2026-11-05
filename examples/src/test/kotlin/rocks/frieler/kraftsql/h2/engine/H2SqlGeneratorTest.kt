@@ -2,9 +2,12 @@ package rocks.frieler.kraftsql.h2.engine
 
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
+import rocks.frieler.kraftsql.data.Column
 import rocks.frieler.kraftsql.data.ConstantData
 import rocks.frieler.kraftsql.data.DataRow
 import rocks.frieler.kraftsql.data.Selection
+import rocks.frieler.kraftsql.data.Table
+import rocks.frieler.kraftsql.data.Type
 import rocks.frieler.kraftsql.data.named
 import rocks.frieler.kraftsql.expressions.Constant
 import rocks.frieler.kraftsql.expressions.get
@@ -34,6 +37,16 @@ class H2SqlGeneratorTest {
             "SELECT CAST(1 AS INTEGER) AS `number`,CAST(NULL AS VARCHAR) AS `name` " +
             "UNION ALL " +
             "SELECT CAST(NULL AS INTEGER) AS `number`,CAST('two' AS VARCHAR) AS `name`"
+    }
+
+    @Test
+    fun `makeSQL() selects specified columns of a table`() {
+        val table = Table<DataRow>("db", "ns", "things", listOf(
+            Column("id", Type.INTEGER),
+            Column("value", Type.NULLABLE_STRING),
+        ))
+
+        H2SqlGenerator.makeSQL(table).normalized() shouldBe "SELECT `id`,`value` FROM `db`.`ns`.`things`"
     }
 
     @Test
@@ -106,6 +119,56 @@ class H2SqlGeneratorTest {
                 "UNION ALL " +
                 "SELECT CAST(2 AS INTEGER) AS `number`,CAST('two' AS VARCHAR) AS `name`" +
             ") AS `source`"
+    }
+
+    @Test
+    fun `makeCreateTableStatement creates the Table in its database and namespace with the native types of its columns`() {
+        val table = Table<DataRow>("db", "ns", "table", listOf(
+            Column("nullable_int", Type.NULLABLE_INTEGER),
+            Column("nullable_string", Type.NULLABLE_STRING),
+        ))
+
+        H2SqlGenerator.makeCreateTableStatement(table).normalized() shouldBe
+            "CREATE TABLE `db`.`ns`.`table` (`nullable_int` INTEGER,`nullable_string` VARCHAR)"
+    }
+
+    @Test
+    fun `makeCreateTableStatement declares non-nullable columns as NOT NULL`() {
+        val table = Table<DataRow>("ns", "table", listOf(
+            Column("int", Type.INTEGER),
+            Column("string", Type.STRING),
+        ))
+
+        H2SqlGenerator.makeCreateTableStatement(table).normalized() shouldBe
+            "CREATE TABLE `ns`.`table` (`int` INTEGER NOT NULL,`string` VARCHAR NOT NULL)"
+    }
+
+    @Test
+    fun `makeDropTableStatement drops the Table from its database and namespace`() {
+        val table = Table<DataRow>("db", "ns", "table", listOf(Column("id", Type.INTEGER)))
+
+        H2SqlGenerator.makeDropTableStatement(table, ifExists = false).normalized() shouldBe
+            "DROP TABLE `db`.`ns`.`table`"
+    }
+
+    @Test
+    fun `makeDropTableStatement adds IF EXISTS if requested`() {
+        val table = Table<DataRow>("ns", "table", listOf(Column("id", Type.INTEGER)))
+
+        H2SqlGenerator.makeDropTableStatement(table, ifExists = true).normalized() shouldBe
+            "DROP TABLE `ns`.`table` IF EXISTS"
+    }
+
+    @Test
+    fun `makeInsertIntoStatement() inserts explicit columns of the given Data into a Table`() {
+        val table = Table<DataRow>("ns", "table", listOf(
+            Column("int", Type.INTEGER),
+            Column("string", Type.NULLABLE_STRING),
+        ))
+        val data = ConstantData(DataRow("id" to 1))
+
+        H2SqlGenerator.makeInsertIntoStatement(table, data).normalized() shouldBe
+            "INSERT INTO `ns`.`table` (`id`) ${H2SqlGenerator.makeSQL(data).normalized()}"
     }
 
     // ATTENTION: Does not respect String literal, but changes them as well!

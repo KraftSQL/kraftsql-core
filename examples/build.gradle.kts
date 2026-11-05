@@ -26,8 +26,8 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 
     "integrationTestImplementation"(libs.junit.platform.suite)
-    "integrationTestRuntimeOnly"(project(":examples"))
-    "integrationTestRuntimeOnly"(project(":kraftsql")) {
+    "integrationTestImplementation"(project(":examples"))
+    "integrationTestImplementation"(project(":kraftsql")) {
         capabilities { requireCapability("${group}:kraftsql-reference-test:${version}") }
     }
 }
