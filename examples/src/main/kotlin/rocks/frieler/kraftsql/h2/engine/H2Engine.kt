@@ -7,7 +7,6 @@ import rocks.frieler.kraftsql.data.Type
 import rocks.frieler.kraftsql.engine.DataClassSerDe
 import rocks.frieler.kraftsql.engine.Engine
 import java.sql.Connection
-import java.sql.DriverManager
 import java.sql.ResultSet
 import kotlin.reflect.KClass
 
@@ -19,11 +18,11 @@ import kotlin.reflect.KClass
  *
  * @constructor Creates an [H2Engine] that executes all queries on the given [Connection].
  * @param connection the JDBC [Connection] to the H2 database to execute queries on; defaults to an in-memory database
+ * configured by the [H2EngineConnectionSettings] service
  * @param sqlGenerator the [H2SqlGenerator] to generate SQL; only extracted and configurable for testing
  */
 class H2Engine(
-    // TODO: Derive database name from environment variables
-    private val connection: Connection = DriverManager.getConnection("jdbc:h2:mem:examples;DATABASE_TO_UPPER=FALSE"),
+    private val connection: Connection = makeConnectionFromSettings(),
     private val sqlGenerator: H2SqlGenerator = H2SqlGenerator,
 ) : Engine {
 
