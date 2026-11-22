@@ -1,4 +1,4 @@
-project.description = "KrafSQL Core Library"
+project.description = "KraftSQL Core Library"
 
 plugins {
     id(libs.plugins.kotlin.jvm.get().pluginId)

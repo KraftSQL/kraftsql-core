@@ -1,4 +1,4 @@
-project.description = "KrafSQL Testing Support"
+project.description = "KraftSQL Testing Support"
 
 plugins {
     id(libs.plugins.kotlin.jvm.get().pluginId)
