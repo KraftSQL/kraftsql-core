@@ -25,7 +25,9 @@ class EngineState {
      * @param table the table to read
      * @return the [DataRow]s stored in the table
      */
-    fun readTable(table: Table<*>): List<DataRow> = tables[table.fqdn]!!.second
+    fun readTable(table: Table<*>): List<DataRow> =
+        (tables[table.fqdn] ?: throw IllegalStateException("Table '${table.fqdn}' not found."))
+            .second
 
     /**
      * Adds a table, replacing any existing table with the same [fully qualified name][Table.fqdn].
@@ -49,7 +51,8 @@ class EngineState {
                 require(targetColumn.type.accepts(entry.second)) { "Column '${targetColumn.name}' of type ${targetColumn.type} cannot hold '${entry.second}'." }
             }
         }
-        tables[table.fqdn]!!.second.addAll(rows)
+        (tables[table.fqdn] ?: throw IllegalStateException("Table '${table.fqdn}' not found."))
+            .second.addAll(rows)
     }
 
     /**

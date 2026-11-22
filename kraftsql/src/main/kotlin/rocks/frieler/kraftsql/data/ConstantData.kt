@@ -50,30 +50,32 @@ open class ConstantData<T : Any> protected constructor(
 
                 if (firstItem is DataRow) {
                     @Suppress("UNCHECKED_CAST") val rows = items as Iterable<DataRow> // because all items are checked to be of the same type
-                    data class ColumnTypeInformation(var type: Type? = null, var nullable: Boolean = false)
-                    val schemaInformation = firstItem.fieldNames.associateWith { ColumnTypeInformation() }
-                    rows.forEach { row -> row.entries.forEach { entry ->
-                        if (entry.second == null) {
-                            with(schemaInformation[entry.first]!!) {
-                                nullable = true
-                                type = type?.makeNullable()
-                            }
-                        } else {
-                            with(schemaInformation[entry.first]!!) {
-                                if (type == null) {
-                                    type = Type.get(entry.second!!::class, nullable)
-                                }
-                                // FIXME: Reject values of different types.
-                            }
-                        }
-                    } }
-                    schemaInformation.map { (name, type) -> Column(name, type.type ?: TODO()) } // FIXME: Handle null values only.
+                    inferSchemaFromDataRows(firstItem, rows)
                 }
 
                 else if (firstItem::class.isData) DataClassSerDe.getSchemaFor(firstItem::class)
 
                 else TODO()
             }
+        }
+
+        private fun inferSchemaFromDataRows(firstItem: DataRow, rows: Iterable<DataRow>): List<Column> {
+            data class ColumnTypeInformation(var type: Type? = null, var nullable: Boolean = false)
+
+            val schemaInformation = firstItem.fieldNames.associateWith { ColumnTypeInformation() }
+            rows.forEach { row ->
+                schemaInformation.forEach { (column, typeInfo) ->
+                    val value = row[column]
+                    if (value != null) {
+                        // FIXME: Reject values of different types.
+                        typeInfo.type = typeInfo.type ?: Type.get(value::class, typeInfo.nullable)
+                    } else {
+                        typeInfo.nullable = true
+                        typeInfo.type = typeInfo.type?.makeNullable()
+                    }
+                }
+            }
+            return schemaInformation.map { (name, type) -> Column(name, type.type ?: TODO()) } // FIXME: Handle null values only.
         }
     }
 }

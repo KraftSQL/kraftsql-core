@@ -9,14 +9,8 @@ import org.junit.jupiter.api.Test
 class ConstantDataTest {
     @Test
     fun `ConstantData can hold DataRows as items`() {
-        val item1 = mockk<DataRow> {
-            every { this@mockk.fieldNames }.returns(listOf("c1", "c2"))
-            every { this@mockk.entries }.returns(listOf("c1" to 1, "c2" to 2))
-        }
-        val item2 = mockk<DataRow> {
-            every { this@mockk.fieldNames }.returns(listOf("c1", "c2"))
-            every { this@mockk.entries }.returns(listOf("c1" to 11, "c2" to 22))
-        }
+        val item1 = DataRow("c1" to 1, "c2" to 2)
+        val item2 = DataRow("c1" to 11, "c2" to 22)
 
         val data = ConstantData(listOf(item1, item2))
 
@@ -62,14 +56,8 @@ class ConstantDataTest {
 
     @Test
     fun `ConstantData infers schema with nullable fields from DataRows`() {
-        val item1 = mockk<DataRow> {
-            every { this@mockk.fieldNames }.returns(listOf("c1", "c2"))
-            every { this@mockk.entries }.returns(listOf("c1" to 1, "c2" to null))
-        }
-        val item2 = mockk<DataRow> {
-            every { this@mockk.fieldNames }.returns(listOf("c1", "c2"))
-            every { this@mockk.entries }.returns(listOf("c1" to null, "c2" to 2))
-        }
+        val item1 = DataRow("c1" to 1, "c2" to null)
+        val item2 = DataRow("c1" to null, "c2" to 22)
 
         val data = ConstantData(listOf(item1, item2))
 
@@ -78,14 +66,8 @@ class ConstantDataTest {
 
     @Test
     fun `ConstantData can also be created from vararg items`() {
-        val item1 = mockk<DataRow> {
-            every { this@mockk.fieldNames }.returns(listOf("c1", "c2"))
-            every { this@mockk.entries }.returns(listOf("c1" to 1, "c2" to 2))
-        }
-        val item2 = mockk<DataRow> {
-            every { this@mockk.fieldNames }.returns(listOf("c1", "c2"))
-            every { this@mockk.entries }.returns(listOf("c1" to 11, "c2" to 22))
-        }
+        val item1 = DataRow("c1" to 1, "c2" to 2)
+        val item2 = DataRow("c1" to 11, "c2" to 22)
 
         val data = ConstantData(item1, item2)
 
