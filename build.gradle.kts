@@ -5,6 +5,10 @@ allprojects {
     repositories {
         mavenCentral()
     }
+
+    dependencyLocking {
+        lockAllConfigurations()
+    }
 }
 
 plugins {
