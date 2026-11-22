@@ -1,7 +1,12 @@
+project.description = "KraftSQL Local Engine"
+
 plugins {
     id(libs.plugins.kotlin.jvm.get().pluginId)
-    application
+    `java-library`
     idea
+    alias(libs.plugins.dokka.javadoc)
+    alias(libs.plugins.kover)
+    id("kraftsql-publishing")
 }
 
 java {

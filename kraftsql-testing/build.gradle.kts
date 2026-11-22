@@ -3,6 +3,9 @@ project.description = "KraftSQL Testing Support"
 plugins {
     id(libs.plugins.kotlin.jvm.get().pluginId)
     `java-library`
+    alias(libs.plugins.dokka.javadoc)
+    alias(libs.plugins.kover)
+    id("kraftsql-publishing")
 }
 
 java {

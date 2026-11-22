@@ -1,11 +1,16 @@
 [versions]
 kotlin = "2.4.20"
+dokka = "2.2.0"
+kover = "0.9.9"
+sonarqube = "7.5.0.8588"
+maven-publish-plugin = "0.37.0"
 h2 = "2.5.252"
 junit = "6.1.3"
 kotest = "6.2.5"
 mockk = "1.14.11"
 
 [libraries]
+maven-publish-plugin = { group = "com.vanniktech.maven.publish", name = "com.vanniktech.maven.publish.gradle.plugin", version.ref = "maven-publish-plugin" }
 kotlin-reflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
 h2-database = { group = "com.h2database", name = "h2", version.ref = "h2" }
 junit-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
@@ -17,3 +22,6 @@ mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+dokka-javadoc = { id = "org.jetbrains.dokka-javadoc", version.ref = "dokka" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }

@@ -4,6 +4,9 @@ plugins {
     id(libs.plugins.kotlin.jvm.get().pluginId)
     `java-library`
     idea
+    alias(libs.plugins.dokka.javadoc)
+    alias(libs.plugins.kover)
+    id("kraftsql-publishing")
 }
 
 java {

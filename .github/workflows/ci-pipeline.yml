@@ -1,0 +1,78 @@
+name: CI Pipeline
+
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.provide_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # for sonar
+      - uses: actions/setup-java@v6
+        with:
+          distribution: 'zulu'
+          java-version: '25'
+      - name: Build and check
+        uses: christopherfrieler/gradle-wrapper-action@0.7.3
+        env:
+          GITHUB_REPO_DEFAULT_BRANCH_NAME: ${{ github.event.repository.default_branch }}
+          GITHUB_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          arguments: |
+            check sonar
+            assemble generatePomFileForMavenPublication kotlinSourcesJar dokkaJavadocJar
+            versionFile
+          artifacts: |
+            core-build kraftsql/build/publications/maven/pom-default.xml kraftsql/build/libs/kraftsql-*.jar
+            core-test-report kraftsql/build/reports/tests/test/**/*
+            local-build kraftsql-local/build/publications/maven/pom-default.xml kraftsql-local/build/libs/kraftsql-local-*.jar
+            local-test-report kraftsql-local/build/reports/tests/test/**/*
+            testing-build kraftsql-testing/build/publications/maven/pom-default.xml kraftsql-testing/build/libs/kraftsql-testing-*.jar
+            testing-test-report kraftsql-testing/build/reports/tests/test/**/*
+            examples-test-report examples/build/reports/tests/**/*
+      - id: provide_version
+        run: echo "version=$(cat build/version.txt)" >> "$GITHUB_OUTPUT"
+
+  deploy_snapshot:
+    needs: ['build']
+    if: github.ref_name == github.event.repository.default_branch && endsWith(needs.build.outputs.version, '-SNAPSHOT')
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: 'zulu'
+          java-version: '25'
+      - name: Deploy to Github Packages
+        uses: christopherfrieler/gradle-wrapper-action@0.7.3
+        env:
+          ORG_GRADLE_PROJECT_github_packages_publishing_user: ${{ github.actor }}
+          ORG_GRADLE_PROJECT_github_packages_publishing_password: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          arguments: publishMavenPublicationToGitHubPackagesRepository
+  deploy:
+    needs: ['build']
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: 'zulu'
+          java-version: '25'
+      - name: Deploy to Maven Central
+        uses: christopherfrieler/gradle-wrapper-action@0.7.3
+        env:
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PUBLISHING_PASSWORD }}
+        with:
+          arguments: publishMavenPublicationToMavenCentralRepository
