@@ -1,0 +1,1 @@
+# Fake lock-file to satisfy sonar, because Gradle does not generate it for the root of this multi-module project.
