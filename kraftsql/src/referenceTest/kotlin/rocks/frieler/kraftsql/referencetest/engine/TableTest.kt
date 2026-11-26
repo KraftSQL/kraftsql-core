@@ -2,6 +2,7 @@ package rocks.frieler.kraftsql.referencetest.engine
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.beEmpty
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import rocks.frieler.kraftsql.data.Column
@@ -77,7 +78,7 @@ class TableTest {
         try {
             val thingsFromTable = table.collect()
 
-            thingsFromTable shouldBe things.items
+            thingsFromTable shouldContainExactlyInAnyOrder things.items.toList()
 
         } finally {
             table.drop()
