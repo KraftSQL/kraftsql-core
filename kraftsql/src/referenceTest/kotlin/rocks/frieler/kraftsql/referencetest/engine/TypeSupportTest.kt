@@ -45,4 +45,24 @@ class TypeSupportTest {
 
         collected shouldContainExactlyInAnyOrder items
     }
+
+    @Test
+    fun `Engine can collect non-nullable Boolean values`() {
+        data class Value(val value: Boolean)
+        val items = listOf(Value(true), Value(false))
+
+        val collected = ConstantData(items).collect()
+
+        collected shouldContainExactlyInAnyOrder items
+    }
+
+    @Test
+    fun `Engine can collect nullable Boolean values, keeping null distinct from false`() {
+        data class Value(val value: Boolean?)
+        val items = listOf(Value(true), Value(false), Value(null))
+
+        val collected = ConstantData(items).collect()
+
+        collected shouldContainExactlyInAnyOrder items
+    }
 }

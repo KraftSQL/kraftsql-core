@@ -85,15 +85,16 @@ class H2EngineTest {
 
     @Test
     fun `collect() can collect values of all supported types`() {
-        val items = listOf(DataRow(
-            "int" to 1,
-            "string" to "KraftSQL",
-        ))
+        val items = listOf(
+            DataRow("int" to 1, "string" to "KraftSQL", "boolean" to true),
+            DataRow("int" to 2, "string" to "SQL", "boolean" to false),
+        )
         val data = mockk<ConstantData<DataRow>> {
             every { this@mockk.items } returns items
             every { schema } returns listOf(
                 Column("int", Type.INTEGER),
                 Column("string", Type.STRING),
+                Column("boolean", Type.BOOLEAN),
             )
         }
 

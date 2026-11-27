@@ -93,6 +93,7 @@ class H2Engine(
     private fun ResultSet.value(column: Column) = when (column.type) {
         Type.INTEGER, Type.NULLABLE_INTEGER -> getObject(column.name, Int::class.javaObjectType)
         Type.STRING, Type.NULLABLE_STRING -> getString(column.name)
+        Type.BOOLEAN, Type.NULLABLE_BOOLEAN -> getObject(column.name, Boolean::class.javaObjectType)
         else -> throw NotImplementedError("Collecting ${column.type} is not implemented.")
     }
 }

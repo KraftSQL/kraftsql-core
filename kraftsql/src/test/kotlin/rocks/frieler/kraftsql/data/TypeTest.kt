@@ -65,4 +65,45 @@ class TypeTest {
         Type.NULLABLE_STRING.accepts(null) shouldBe true
         Type.NULLABLE_STRING.accepts(Unit) shouldBe false
     }
+
+    @Test
+    fun `KraftSQL supports non-nullable Boolean`() {
+        Type.BOOLEAN.nullable shouldBe false
+        Type.get(typeOf<Boolean>()) shouldBe Type.BOOLEAN
+        Type.get(Boolean::class, false) shouldBe Type.BOOLEAN
+        Type.BOOLEAN.makeNullable() shouldBe Type.NULLABLE_BOOLEAN
+    }
+
+    @Test
+    fun `non-nullable Boolean accepts Booleans, but not null`() {
+        Type.BOOLEAN.accepts(true) shouldBe true
+        Type.BOOLEAN.accepts(false) shouldBe true
+        Type.BOOLEAN.accepts(null) shouldBe false
+        Type.BOOLEAN.accepts(Unit) shouldBe false
+    }
+
+    @Test
+    fun `KraftSQL supports nullable Boolean`() {
+        Type.NULLABLE_BOOLEAN.nullable shouldBe true
+        Type.get(typeOf<Boolean?>()) shouldBe Type.NULLABLE_BOOLEAN
+        Type.get(Boolean::class, true) shouldBe Type.NULLABLE_BOOLEAN
+        Type.NULLABLE_BOOLEAN.makeNullable() shouldBe Type.NULLABLE_BOOLEAN
+    }
+
+    @Test
+    fun `nullable Boolean accepts Booleans and null`() {
+        Type.NULLABLE_BOOLEAN.accepts(true) shouldBe true
+        Type.NULLABLE_BOOLEAN.accepts(false) shouldBe true
+        Type.NULLABLE_BOOLEAN.accepts(null) shouldBe true
+        Type.NULLABLE_BOOLEAN.accepts(Unit) shouldBe false
+    }
+
+    @Test
+    fun `Boolean types do not accept other representations of truth values like numbers or Strings`() {
+        for (type in listOf(Type.BOOLEAN, Type.NULLABLE_BOOLEAN)) {
+            for (value in listOf(1, 0, "true", "false", "TRUE", "1", 'Y')) {
+                type.accepts(value) shouldBe false
+            }
+        }
+    }
 }

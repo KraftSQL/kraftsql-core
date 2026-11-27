@@ -20,6 +20,12 @@ class H2TypeMappingTest {
     }
 
     @Test
+    fun `Boolean types are mapped to BOOLEAN`() {
+        Type.BOOLEAN.native shouldBe JDBCType.BOOLEAN
+        Type.NULLABLE_BOOLEAN.native shouldBe JDBCType.BOOLEAN
+    }
+
+    @Test
     fun `an unknown Type cannot be mapped`() {
         shouldThrow<IllegalStateException> {
             object : Type {
