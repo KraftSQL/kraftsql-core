@@ -69,6 +69,27 @@ interface Type {
         }
 
         /**
+         * A non-nullable Boolean, i.e. either `true` or `false`.
+         *
+         * Only Kotlin [Boolean] values are accepted, no implicit conversions between booleans, numbers and strings,
+         * that some SQL engines apply.
+         */
+        val BOOLEAN = object : Type {
+            override fun accepts(value: Any?) = value is Boolean
+            override fun toString() = "Boolean"
+        }
+
+        /**
+         * A nullable Boolean.
+         *
+         * Like [BOOLEAN], but additionally allows `null`, which is distinct from `false`.
+         */
+        val NULLABLE_BOOLEAN = object : Type {
+            override fun accepts(value: Any?) = value is Boolean?
+            override fun toString() = "Boolean?"
+        }
+
+        /**
          * Returns the [Type] corresponding to the given [KType].
          *
          * @param kType a Kotlin type
@@ -79,6 +100,8 @@ interface Type {
             typeOf<Int?>() -> NULLABLE_INTEGER
             typeOf<String>() -> STRING
             typeOf<String?>() -> NULLABLE_STRING
+            typeOf<Boolean>() -> BOOLEAN
+            typeOf<Boolean?>() -> NULLABLE_BOOLEAN
             else -> throw IllegalStateException("Unsupported type $kType")
         }
 
@@ -92,6 +115,7 @@ interface Type {
         fun get(kClass: KClass<*>, nullable: Boolean = false) = when (kClass) {
             Int::class -> if (nullable) NULLABLE_INTEGER else INTEGER
             String::class -> if (nullable) NULLABLE_STRING else STRING
+            Boolean::class -> if (nullable) NULLABLE_BOOLEAN else BOOLEAN
             else -> throw IllegalStateException("Unsupported type $kClass")
         }
 
@@ -106,6 +130,7 @@ interface Type {
             this.nullable -> this
             this == INTEGER -> NULLABLE_INTEGER
             this == STRING -> NULLABLE_STRING
+            this == BOOLEAN -> NULLABLE_BOOLEAN
             else -> throw NotImplementedError("Nullable variant of $this is not supported.")
         }
     }

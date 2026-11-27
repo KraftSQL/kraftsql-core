@@ -95,6 +95,12 @@ class H2SqlGeneratorTest {
     }
 
     @Test
+    fun `literal() renders a Boolean as boolean literal`() {
+        H2SqlGenerator.literal(true) shouldBe "true"
+        H2SqlGenerator.literal(false) shouldBe "false"
+    }
+
+    @Test
     fun `makeSQL selects an expression of a Selection aliased by its given name`() {
         val source = ConstantData(DataRow("foo" to "bar"))
         val selection = Selection(source, listOf(source.get<String>("foo") named "fu"))

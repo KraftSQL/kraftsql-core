@@ -188,11 +188,11 @@ class KraftSqlLocalEngineTest {
 
     @Test
     fun `collect() can collect values of all supported types`() {
-        data class AllTypes(val int: Int, val nullableInt: Int?, val string: String, val nullableString: String?)
+        data class AllTypes(val int: Int, val nullableInt: Int?, val string: String, val nullableString: String?, val boolean: Boolean, val nullableBoolean: Boolean?)
         val items = listOf(
-            AllTypes(42, 42, "foo", "foo"),
-            AllTypes(0, null, "", ""),
-            AllTypes(-1, 0, "it's \"quoted\"", null),
+            AllTypes(42, 42, "foo", "foo", true, true),
+            AllTypes(0, null, "", "", false, false),
+            AllTypes(-1, 0, "it's \"quoted\"", null, true, null),
         )
         val data = mockk<ConstantData<AllTypes>> { every { this@mockk.items } returns items }
 
